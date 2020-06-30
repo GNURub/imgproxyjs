@@ -49,6 +49,5 @@
   "files": [
     "dist/**/*"
   ],
-  "author": "",
   "license": "ISC"
 }
