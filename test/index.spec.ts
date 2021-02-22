@@ -1,4 +1,4 @@
-import { ImgProxy } from "../src";
+import { ImgProxy } from "../dist/";
 
 const base = 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Wikipedia_logo_593.jpg';
 
