@@ -1,7 +1,7 @@
 {
   "name": "imgproxyjs",
-  "version": "1.1.0",
-  "description": "ImgProxy javascript client",
+  "version": "1.1.1",
+  "description": "ImgProxy javascript client for node/browser",
   "main": "dist/index.node.js",
   "browser": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,6 +10,11 @@
     "type": "git",
     "url": "https://github.com/GNURub/imgproxyjs.git"
   },
+  "keywords": [
+    "imgproxy",
+    "imgproxyjs",
+    "image"
+  ],
   "author": {
     "name": "Rubén Cid Lara",
     "email": "rubencidlara@gmail.com"
@@ -54,7 +59,8 @@
     "webpack-cli": "^3.3.12"
   },
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "package.json"
   ],
   "license": "MIT"
 }
