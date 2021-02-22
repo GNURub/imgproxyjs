@@ -1,4 +1,4 @@
-import createHmac from 'create-hmac';
+import { createHmac } from 'crypto';
 
 export interface Gravity {
     gravity_type:
@@ -362,3 +362,5 @@ export class ImgProxy {
       return `${config.url}/insecure${path}`;
     }
 }
+
+export default ImgProxy;
