@@ -10,6 +10,6 @@ test("Without options", () => {
 
 test("With options", () => {
     const instance = new ImgProxy({url: 'https://images.test.com'}, {size:{width:40, height: 40, enlarge:true, extend:false}, background: '#ffffff'});
-    const expected = `https://images.test.com/insecure/size:40:40:true:false/background:#ffffff/${ImgProxy.urlSafeBase64(base)}`
+    const expected = `https://images.test.com/insecure/size:40:40:true:false/bg:#ffffff/${ImgProxy.urlSafeBase64(base)}`
     expect(instance.get(base)).toEqual(expected);
 });
