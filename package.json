@@ -1,6 +1,6 @@
 {
   "name": "imgproxyjs",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "ImgProxy javascript client",
   "main": "dist/index.node.js",
   "browser": "dist/index.js",
