@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.com/GNURub/imgproxyjs.svg?branch=develop)](https://travis-ci.com/GNURub/imgproxyjs)
+![npm](https://img.shields.io/npm/dm/imgproxyjs)
+![npm](https://img.shields.io/npm/v/imgproxyjs)
+![npm bundle size](https://img.shields.io/bundlephobia/min/imgproxyjs)
+
 ## Javascript client (nodejs/browser) for [imgproxy](https://imgproxy.net/).
 
     import imgproxyjs from 'imgproxyjs';
