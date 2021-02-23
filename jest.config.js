@@ -1,4 +1,3 @@
-export default {
-  preset: 'ts-jest',
+module.exports = {
   testEnvironment: 'node',
 };

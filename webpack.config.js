@@ -1,23 +1,20 @@
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
+const path = require('path');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const commons = {
     mode: 'production',
     entry: {
         main: './src/index.ts'
     },
     resolve: {
-        extensions: [".ts", ".js"],
+        extensions: [".ts"],
         fallback: {
             "crypto": false,
             "buffer": false,
         }
     },
+    plugins: [
+        new CleanWebpackPlugin(),
+    ],
     module: {
         rules: [
             {
@@ -29,31 +26,30 @@ const commons = {
     }
 }
 
-const serverConfig = Object.assign({}, {
-    target: 'node',
-    output: {
-        path: resolve(__dirname, 'dist'),
-        filename: 'index.node.js',
-        globalObject: 'this',
-    },
-    //…
-}, commons);
+// const serverConfig = Object.assign({}, {
+//     target: 'node',
+//     output: {
+//         path: path.join(__dirname, 'dist'),
+//         filename: 'index.node.js',
+//     },
+//     //…
+// }, commons);
 
 const clientConfig = Object.assign({}, {
     target: 'web', // <=== can be omitted as default is 'web'
     output: {
-        path: resolve(__dirname, 'dist'),
-        filename: 'index.js',
+        path: path.join(__dirname, 'dist'),
+        filename: 'index.browser.js',
         libraryTarget: "umd",
         globalObject: 'this',
     },
     resolve: {
         fallback: {
-            "crypto": require.resolve('crypto-browserify'),
-            "buffer": require.resolve('buffer/')
+            "crypto": require.resolve("crypto-browserify"),
+            "buffer": require("buffer/").Buffer,
         }
-    },
+    }
     //…
 }, commons);
 
-export default [serverConfig, clientConfig];
+module.exports = [clientConfig];

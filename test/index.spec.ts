@@ -1,4 +1,4 @@
-import { ImgProxy } from "../dist/";
+const ImgProxy = require('../').ImgProxy;
 
 const base = 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Wikipedia_logo_593.jpg';
 
