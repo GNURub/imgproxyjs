@@ -128,6 +128,8 @@ export interface Options {
     preset?: string[];
     cachebuster?: string;
     filename?: string;
+    auto_rotate?: boolean;
+    rotate?: number;
     format?: string;
 }
 
@@ -157,17 +159,23 @@ export class ImgProxy {
       brightness: 'br',
       contrast: 'co',
       saturation: 'sa',
-      blur: 'br',
+      blur: 'bl',
       sharpen: 'sh',
       pixelate: 'pix',
+      unsharpening: 'ush',
       watermark: 'wm',
       watermark_url: 'wmu',
+      video_thumbnail_second: 'vts',
       style: 'st',
       jpeg_options: 'jpgo',
       png_options: 'pngo',
       gif_options: 'gifo',
       preset: 'pr',
       cachebuster: 'cb',
+      strip_metadata: 'sm',
+      strip_color_profile: 'scp',
+      auto_rotate: 'ar',
+      rotate: 'rot',
       filename: 'fn',
       format: 'ext',
     };
@@ -217,6 +225,11 @@ export class ImgProxy {
       if (!val || typeof val !== 'object') {
         throw 'Need to be an object param';
       }
+    }
+
+
+    background(val: string) {
+      return this.setOption('background', val);
     }
 
     private resize(val: any) {
