@@ -4,10 +4,10 @@ import { transformers } from './transformer';
 import { Adjust, Crop, Extend, GIFOptions, Gravity, Options, Padding, PNGOptions, Resize, RGBColor, Size, Trim, Watermark } from './types';
 
 export class ImgProxy extends transformers {
-  private options: any = {
+  private options = {
     config: {},
-    options: {},
     defaultOpts: {},
+    settings: {},
   };
 
   private abbreviations = {
@@ -73,10 +73,7 @@ export class ImgProxy extends transformers {
   ) {
     super();
 
-    this.options = {
-      config: { key, salt, url },
-      settings: {},
-    };
+    this.options.config = { key, salt, url };
 
     this.isObject(options);
 
@@ -96,9 +93,18 @@ export class ImgProxy extends transformers {
     return this;
   }
 
+  private setOptions(options: Options) {
+    this.isObject(options);
+    for (const key in options) {
+      this.setOption(key, options[key]);
+    }
+  }
+
   setDefaultOptions(options: Options) {
+    this.isObject(options);
     this.options.defaultOpts = options;
-    this.options.settings = { ...options, ...this.options.settings};
+    this.setOptions(options);
+    
     return this;
   }
 
@@ -108,7 +114,8 @@ export class ImgProxy extends transformers {
   }
 
   resetOptions() {
-    this.options.settings = this.options.defaultOpts;
+    this.options.settings = {};
+    this.setOptions(this.options.defaultOpts)
     return this;
   }
 
@@ -277,8 +284,9 @@ export class ImgProxy extends transformers {
   }
 
   private sign(target) {
-    const hexKey = ImgProxy.hexDecode(this.options.config.key);
-    const hexSalt = ImgProxy.hexDecode(this.options.config.salt);
+    const { config }: any = this.options;
+    const hexKey = ImgProxy.hexDecode(config?.key);
+    const hexSalt = ImgProxy.hexDecode(config?.salt);
 
     const hmac = createHmac('sha256', hexKey);
     hmac.update(hexSalt);
@@ -299,8 +307,7 @@ export class ImgProxy extends transformers {
   }
 
   public get(originalImage: string) {
-    const { settings } = this.options;
-    const { config } = this.options;
+    const { settings, config }: any = this.options;
 
     if (!originalImage) {
       throw 'Missing required param: image';
