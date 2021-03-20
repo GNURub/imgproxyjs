@@ -13,3 +13,23 @@ test("With options", () => {
     const expected = `https://images.test.com/insecure/size:40:40:true:false/bg:ffffff/${ImgProxy.urlSafeBase64(base)}`
     expect(instance.get(base)).toEqual(expected);
 });
+
+
+test("With methods", () => {
+    const instance = new ImgProxy({url: 'https://images.test.com'});
+    instance
+        .size({width:40, height: 40, enlarge:true, extend:false})
+        .background('ffffff');
+    const expected = `https://images.test.com/insecure/size:40:40:true:false/bg:ffffff/${ImgProxy.urlSafeBase64(base)}`
+    expect(instance.get(base)).toEqual(expected);
+});
+
+test("With methods reset option", () => {
+    const instance = new ImgProxy({url: 'https://images.test.com'});
+    instance
+        .size({width:40, height: 40, enlarge:true, extend:false})
+        .background('#ffffff')
+        .resetOption('size');
+    const expected = `https://images.test.com/insecure/bg:ffffff/${ImgProxy.urlSafeBase64(base)}`
+    expect(instance.get(base)).toEqual(expected);
+});

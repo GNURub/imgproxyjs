@@ -1,380 +1,320 @@
 import { createHmac } from 'crypto';
 import { Buffer } from 'buffer';
+import { transformers } from './transformer';
+import { Adjust, Crop, Extend, GIFOptions, Gravity, Options, Padding, PNGOptions, Resize, RGBColor, Size, Trim, Watermark } from './types';
 
-export interface Gravity {
-    gravity_type:
-        | 'no'
-        | 'so'
-        | 'ea'
-        | 'we'
-        | 'noea'
-        | 'nowe'
-        | 'soea'
-        | 'sowe'
-        | 'ce';
-    x_offset?: number;
-    y_offset?: number;
-}
+export class ImgProxy extends transformers {
+  private options: any = {
+    config: {},
+    options: {},
+    defaultOpts: {},
+  };
 
-export interface Resize {
-    resizing_type?: string;
-    width?: number;
-    height?: number;
-    enlarge?: boolean;
-    extend?: boolean;
-}
+  private abbreviations = {
+    resize: 'rs',
+    size: 'size',
+    resizing_type: 'rt',
+    resizing_algorithm: 'ra',
+    width: 'w',
+    height: 'h',
+    enlarge: 'el',
+    extend: 'ex',
+    gravity: 'g',
+    crop: 'c',
+    padding: 'pd',
+    trim: 't',
+    quality: 'q',
+    max_bytes: 'mb',
+    background: 'bg',
+    adjust: 'a',
+    brightness: 'br',
+    contrast: 'co',
+    saturation: 'sa',
+    blur: 'bl',
+    sharpen: 'sh',
+    pixelate: 'pix',
+    unsharpening: 'ush',
+    watermark: 'wm',
+    watermark_url: 'wmu',
+    video_thumbnail_second: 'vts',
+    style: 'st',
+    jpeg_options: 'jpgo',
+    png_options: 'pngo',
+    gif_options: 'gifo',
+    preset: 'pr',
+    cachebuster: 'cb',
+    strip_metadata: 'sm',
+    strip_color_profile: 'scp',
+    auto_rotate: 'ar',
+    rotate: 'rot',
+    filename: 'fn',
+    format: 'ext',
+  };
 
-export interface Size {
-    width?: number;
-    height?: number;
-    enlarge?: boolean;
-    extend?: boolean;
-}
+  private transformers = {
+    resize: this.tresize,
+    size: this.tsize,
+    extend: this.textend,
+    gravity: this.tgravity,
+    crop: this.tcrop,
+    padding: this.tpadding,
+    background: this.tbackground,
+    trim: this.ttrim,
+    adjust: this.tadjust,
+    watermark: this.twatermark,
+    jpeg_options: this.tjpegOptions,
+    png_options: this.tpngOptions,
+    gif_options: this.tgifOptions,
+  };
 
-export interface Extend {
-    extend: boolean;
-    gravity?: string;
-}
+  constructor(
+    { url, key, salt }: { url: string; key?: string; salt?: string },
+    options: Options = {},
+  ) {
+    super();
 
-export interface Crop {
-    width?: number;
-    height?: number;
-    gravity?: string;
-}
-
-export interface Padding {
-    top?: number;
-    right?: number;
-    bottom?: number;
-    left?: number;
-}
-
-export interface Trim {
-    threshold?: string;
-    color?: string;
-    equal_hor?: boolean;
-    equal_ver?: boolean;
-}
-
-export interface Adjust {
-    brightness?: number;
-    contrast?: number;
-    saturation?: number;
-}
-
-export interface Watermark {
-    opacity: string;
-    position?: string;
-    x_offset?: number;
-    y_offset?: number;
-    scale?: string;
-}
-
-export interface JPEGOptions {
-    progressive?: boolean;
-    no_subsample?: boolean;
-    trellis_quant?: boolean;
-    overshoot_deringing?: boolean;
-    optimize_scans?: boolean;
-    quant_table?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-}
-
-export interface PNGOptions {
-    png_interlaced?: boolean;
-    png_quantize?: boolean;
-    png_quantization_colors: number;
-}
-
-export interface GIFOptions {
-    gif_optimize_frames?: boolean;
-    gif_optimize_transparency?: boolean;
-}
-
-export interface Options {
-    resize?: Resize;
-    size?: Size;
-    resizing_type?: 'fit' | 'fill' | 'auto';
-    resizing_algorithm?:
-        | 'nearest'
-        | 'linear'
-        | 'cubic'
-        | 'lanczos2'
-        | 'lanczos3';
-    width?: number;
-    height?: number;
-    dpr?: number;
-    enlarge?: boolean;
-    extend?: Extend;
-    gravity?: Gravity;
-    crop?: Crop;
-    padding?: Padding;
-    trim?: Trim;
-    quality?: number;
-    max_bytes?: number;
-    background?: string;
-    adjust?: Adjust;
-    brightness?: string;
-    contrast?: number;
-    saturation?: number;
-    blur?: number;
-    sharpen?: number;
-    pixelate?: number;
-    watermark?: Watermark;
-    watermark_url?: string;
-    style?: string;
-    jpeg_options?: JPEGOptions;
-    png_options?: PNGOptions;
-    gif_options?: GIFOptions;
-    preset?: string[];
-    cachebuster?: string;
-    filename?: string;
-    auto_rotate?: boolean;
-    rotate?: number;
-    format?: string;
-}
-
-export class ImgProxy {
-    private options: any = {
-      config: {},
-      options: {},
+    this.options = {
+      config: { key, salt, url },
+      settings: {},
     };
 
-    private abbreviations = {
-      resize: 'rs',
-      size: 'size',
-      resizing_type: 'rt',
-      resizing_algorithm: 'ra',
-      width: 'w',
-      height: 'h',
-      enlarge: 'el',
-      extend: 'ex',
-      gravity: 'g',
-      crop: 'c',
-      padding: 'pd',
-      trim: 't',
-      quality: 'q',
-      max_bytes: 'mb',
-      background: 'bg',
-      adjust: 'a',
-      brightness: 'br',
-      contrast: 'co',
-      saturation: 'sa',
-      blur: 'bl',
-      sharpen: 'sh',
-      pixelate: 'pix',
-      unsharpening: 'ush',
-      watermark: 'wm',
-      watermark_url: 'wmu',
-      video_thumbnail_second: 'vts',
-      style: 'st',
-      jpeg_options: 'jpgo',
-      png_options: 'pngo',
-      gif_options: 'gifo',
-      preset: 'pr',
-      cachebuster: 'cb',
-      strip_metadata: 'sm',
-      strip_color_profile: 'scp',
-      auto_rotate: 'ar',
-      rotate: 'rot',
-      filename: 'fn',
-      format: 'ext',
-    };
+    this.isObject(options);
 
-    private transformers = {
-      resize: this.resize,
-      size: this.size,
-      extend: this.extend,
-      gravity: this.gravity,
-      crop: this.crop,
-      padding: this.padding,
-      trim: this.trim,
-      adjust: this.adjust,
-      watermark: this.watermark,
-      jpeg_options: this.jpegOptions,
-      png_options: this.pngOptions,
-      gif_options: this.gifOptions,
-    };
+    for (const key in options) {
+      this.setOption(key, options[key]);
+    }
+  }
 
-    constructor(
-      { url, key, salt }: { url: string; key?: string; salt?: string },
-      options: Options = {},
-    ) {
-      this.options = {
-        config: { key, salt, url },
-        settings: {},
-      };
-
-      this.isObject(options);
-
-      for (const key in options) {
-        this.setOption(key, options[key]);
-      }
+  setOption(option: string, value: any): ImgProxy {
+    if (value === null) {
+      return this.resetOption(option);
     }
 
-    setOption(option, value) {
-      if (value === null) {
-        return;
-      }
-
-      this.options.settings[option] = `${this.abbreviations?.[option] ?? option}:${
-        this.transformers?.[option]?.call?.(this, value) ?? value
+    this.options.settings[option] = `${this.abbreviations?.[option] ?? option}:${this.transformers?.[option]?.call?.(this, value) ?? value
       }`;
+
+    return this;
+  }
+
+  setDefaultOptions(options: Options) {
+    this.options.defaultOpts = options;
+    this.options.settings = { ...options, ...this.options.settings};
+    return this;
+  }
+
+  resetDefaultOptions() {
+    this.options.defaultOpts = {};
+    return this;
+  }
+
+  resetOptions() {
+    this.options.settings = this.options.defaultOpts;
+    return this;
+  }
+
+   resetOption(option: string) {
+    delete this.options.settings?.[this.abbreviations?.[option] ?? option];
+    return this;
+  }
+
+  resize(val: Resize) {
+    return this.setOption('resize', val);
+  }
+
+  crop(val: Crop) {
+    return this.setOption('crop', val);
+  }
+
+  size(val: Size) {
+    return this.setOption('size', val);
+  }
+
+  extend(val: Extend) {
+    return this.setOption('extend', val);
+  }
+
+  trim(val: Trim) {
+    return this.setOption('trim', val);
+  }
+
+  adjust(val: Adjust) {
+    return this.setOption('adjust', val);
+  }
+
+  resizingType(val: 'fit' | 'fill' | 'auto') {
+    return this.setOption('resizing_type', val);
+  }
+
+  resizingAlgorithm(val: 'nearest' | 'linear' | 'cubic' | 'lanczos2' | 'lanczos3') {
+    return this.setOption('resizing_algorithm', val);
+  }
+
+  width(width: number) {
+    return this.setOption('width', `${width}`);
+  }
+
+  height(height: number) {
+    return this.setOption('height', `${height}`);
+  }
+
+  dpr(val: number | string) {
+    if (val > 0) {
+      return this.setOption('dpr', `${val}`);
+    }
+    return this;
+  }
+
+  maxBytes(val: number) {
+    return this.setOption('max_bytes', `${val}`);
+  }
+
+  padding(val: Padding) {
+    return this.setOption('padding', val);
+  }
+
+  enlarge(val: number) {
+    return this.setOption('enlarge', `${val}`);
+  }
+
+  pixelate(val: number) {
+    return this.setOption('pixelate', `${val}`);
+  }
+
+  gravity(val: Gravity) {
+    return this.setOption('gravity', val);
+  }
+
+  quality(quality: number) {
+    return this.setOption('quality', `${quality}`);
+  }
+
+  background(color: RGBColor | string) {
+    return this.setOption('background', color);
+  }
+
+  backgroundAlpha(val: number) {
+    return this.setOption('background_alpha', `${val}`);
+  }
+
+  blur(val: number) {
+    return this.setOption('blur', `${val}`);
+  }
+
+  saturation(val: number) {
+    return this.setOption('saturation', `${val}`);
+  }
+
+  contrast(val: number) {
+    return this.setOption('contrast', `${val}`);
+  }
+
+  brightness(val: number) {
+    return this.setOption('brightness', `${val}`);
+  }
+
+  sharpen(val: number) {
+    return this.setOption('sharpen', `${val}`);
+  }
+
+  watermark(val: Watermark) {
+    return this.setOption('watermark', val);
+  }
+
+  watermarkUrl(val: string) {
+    return this.setOption('watermark_url', val);
+  }
+
+  preset(...presets: string[]) {
+    return this.setOption('preset', presets.join(':'));
+  }
+
+  cacheBuster(val: string) {
+    return this.setOption('cachebuster', val);
+  }
+
+  format(val: string) {
+    return this.setOption('format', val);
+  }
+
+  filename(val: string) {
+    return this.setOption('filename', val);
+  }
+
+  rotate(val: number) {
+    return this.setOption('rotate', val);
+  }
+
+  autoRotate(val: boolean) {
+    return this.setOption('auto_rotate', val);
+  }
+
+  style(val: string) {
+    return this.setOption('style', val);
+  }
+
+  page(val: number) {
+    return this.setOption('page', `${val}`);
+  }
+
+  videoThumbnailSecond(val: number) {
+    return this.setOption('video_thumbnail_second', `${val}`);
+  }
+
+  stripMetadata(val: boolean) {
+    return this.setOption('strip_metadata', val);
+  }
+
+  strip_color_profile(val: boolean) {
+    return this.setOption('strip_color_profile', val);
+  }
+
+  gifOptions(val: GIFOptions) {
+    return this.setOption('gif_options', val);
+  }
+
+  pngOptions(val: PNGOptions) {
+    return this.setOption('png_options', val);
+  }
+
+  private sign(target) {
+    const hexKey = ImgProxy.hexDecode(this.options.config.key);
+    const hexSalt = ImgProxy.hexDecode(this.options.config.salt);
+
+    const hmac = createHmac('sha256', hexKey);
+    hmac.update(hexSalt);
+    hmac.update(target);
+    return ImgProxy.urlSafeBase64(hmac.digest());
+  }
+
+  static hexDecode(hex) {
+    return Buffer.from(hex, 'hex');
+  }
+
+  static urlSafeBase64(string) {
+    return Buffer.from(string)
+      .toString('base64')
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+  }
+
+  public get(originalImage: string) {
+    const { settings } = this.options;
+    const { config } = this.options;
+
+    if (!originalImage) {
+      throw 'Missing required param: image';
     }
 
-    private isObject(val: any) {
-      if (!val || typeof val !== 'object') {
-        throw 'Need to be an object param';
-      }
+    const encoded_url = ImgProxy.urlSafeBase64(originalImage);
+    const options = Object.values(settings).join('/');
+    const path = options ? `/${options}/${encoded_url}` : `/${encoded_url}`;
+    if (config.key && config.salt) {
+      return `${config.url}/${this.sign(path)}${path}`;
     }
 
-
-    background(val: string) {
-      return this.setOption('background', val);
-    }
-
-    private resize(val: any) {
-      this.isObject(val);
-      const {
-        resizing_type, width, height, enlarge, extend,
-      } = val;
-      return this.stringify([resizing_type, width, height, enlarge, extend]);
-    }
-
-    private size(val: any) {
-      this.isObject(val);
-      const {
-        width, height, enlarge, extend,
-      } = val;
-      return this.stringify([width, height, enlarge, extend]);
-    }
-
-    private extend(val: any) {
-      this.isObject(val);
-      const { extend, gravity } = val;
-      return this.stringify([extend, gravity]);
-    }
-
-    private gravity(val: any) {
-      this.isObject(val);
-      const { gravity_type, x_offset, y_offset } = val;
-      return this.stringify([gravity_type, x_offset, y_offset]);
-    }
-
-    private crop(val: any) {
-      this.isObject(val);
-      const { width, height, gravity } = val;
-      return this.stringify([width, height, gravity]);
-    }
-
-    private padding(val: any) {
-      this.isObject(val);
-      const {
-        top, right, buttom, left,
-      } = val;
-      return this.stringify([top, right, buttom, left]);
-    }
-
-    private trim(val: any) {
-      this.isObject(val);
-      const {
-        threshold, color, equal_hor, equal_ver,
-      } = val;
-      return this.stringify([threshold, color, equal_hor, equal_ver]);
-    }
-
-    private adjust(val: any) {
-      this.isObject(val);
-      const { brightness, contrast, saturation } = val;
-      return this.stringify([brightness, contrast, saturation]);
-    }
-
-    private watermark(val: any) {
-      this.isObject(val);
-      const {
-        opacity, position, x_offset, y_offset, scale,
-      } = val;
-      return this.stringify([opacity, position, x_offset, y_offset, scale]);
-    }
-
-    private jpegOptions(val: any) {
-      this.isObject(val);
-      const {
-        progressive,
-        no_subsample,
-        trellis_quant,
-        overshoot_deringing,
-        optimize_scans,
-        quant_table,
-      } = val;
-      return this.stringify([
-        progressive,
-        no_subsample,
-        trellis_quant,
-        overshoot_deringing,
-        optimize_scans,
-        quant_table,
-      ]);
-    }
-
-    private pngOptions(val: any) {
-      this.isObject(val);
-      const { png_interlaced, png_quantize, png_quantization_colors } = val;
-      return this.stringify([
-        png_interlaced,
-        png_quantize,
-        png_quantization_colors,
-      ]);
-    }
-
-    private gifOptions(val: any) {
-      this.isObject(val);
-      const { gif_optimize_frames, gif_optimize_transparency } = val;
-      return this.stringify([gif_optimize_frames, gif_optimize_transparency]);
-    }
-
-    private stringify(option: any[]) {
-      return option.map((o) => o ?? '').join(':');
-    }
-
-    private sign(target) {
-      const hexKey = ImgProxy.hexDecode(this.options.config.key);
-      const hexSalt = ImgProxy.hexDecode(this.options.config.salt);
-
-      const hmac = createHmac('sha256', hexKey);
-      hmac.update(hexSalt);
-      hmac.update(target);
-      return ImgProxy.urlSafeBase64(hmac.digest());
-    }
-
-    static hexDecode(hex) {
-      return Buffer.from(hex, 'hex');
-    }
-
-    static urlSafeBase64(string) {
-      return Buffer.from(string)
-        .toString('base64')
-        .replace(/=/g, '')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_');
-    }
-
-    public get(originalImage: string) {
-      const { settings } = this.options;
-      const { config } = this.options;
-
-      if (!originalImage) {
-        throw 'Missing required param: image';
-      }
-
-      const encoded_url = ImgProxy.urlSafeBase64(originalImage);
-      const options = Object.values(settings).join('/');
-      const path = options ? `/${options}/${encoded_url}` : `/${encoded_url}`;
-      if (config.key && config.salt) {
-        return `${config.url}/${this.sign(path)}${path}`;
-      }
-
-      return `${config.url}/insecure${path}`;
-    }
+    return `${config.url}/insecure${path}`;
+  }
 }
 
 export default ImgProxy;
