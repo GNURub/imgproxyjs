@@ -73,7 +73,7 @@ export class ImgProxy extends transformers {
   ) {
     super();
 
-    this.options.config = { key, salt, url, autoreset: autoreset !== true ? autoreset : true };
+    this.options.config = { key, salt, url, autoreset: autoreset !== true ? !!autoreset : true };
 
     this.isObject(options);
 
