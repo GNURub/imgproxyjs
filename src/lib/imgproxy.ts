@@ -4,7 +4,7 @@ import { transformers } from './transformer';
 import { Adjust, Crop, Extend, GIFOptions, Gravity, Options, Padding, PNGOptions, Resize, RGBColor, Size, Trim, Watermark } from './types';
 
 export class ImgProxy extends transformers {
-  private options = {
+  private options: any = {
     config: {},
     defaultOpts: {},
     settings: {},
@@ -68,18 +68,22 @@ export class ImgProxy extends transformers {
   };
 
   constructor(
-    { url, key, salt }: { url: string; key?: string; salt?: string },
+    { url, key, salt, autoreset }: { url: string; key?: string; salt?: string, autoreset: boolean },
     options: Options = {},
   ) {
     super();
 
-    this.options.config = { key, salt, url };
+    this.options.config = { key, salt, url, autoreset: autoreset !== true ? !!autoreset : true };
 
     this.isObject(options);
 
     for (const key in options) {
       this.setOption(key, options[key]);
     }
+  }
+
+  setAutoreset(autoreset: boolean) {
+    this.options.config.autoreset = autoreset;
   }
 
   setOption(option: string, value: any): ImgProxy {
@@ -316,11 +320,19 @@ export class ImgProxy extends transformers {
     const encoded_url = ImgProxy.urlSafeBase64(originalImage);
     const options = Object.values(settings).join('/');
     const path = options ? `/${options}/${encoded_url}` : `/${encoded_url}`;
+
+    let url;
     if (config.key && config.salt) {
-      return `${config.url}/${this.sign(path)}${path}`;
+      url = `${config.url}/${this.sign(path)}${path}`;
+    } else {
+      url = `${config.url}/insecure${path}`;
     }
 
-    return `${config.url}/insecure${path}`;
+    if (this.options.config.autoreset) {
+      this.resetOptions();
+    }
+
+    return url;
   }
 }
 
